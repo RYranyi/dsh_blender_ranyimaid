@@ -123,6 +123,178 @@ def organise():
             col.objects.link(ob)
 
 
+def fix_hair_neckline():
+    """Trim the hair that sinks into the neck/body, close the cut rims and
+    taper the side locks so they end in a point instead of a flat disc."""
+    import bmesh
+    cuts = {"HairCap": 0.6010, "Lock_0": 0.6400, "Lock_0_mir": 0.6400}
+    for name, zcut in cuts.items():
+        ob = bpy.data.objects.get(name)
+        if ob is None:
+            continue
+        bm = bmesh.new()
+        bm.from_mesh(ob.data)
+        bmesh.ops.bisect_plane(
+            bm, geom=list(bm.verts) + list(bm.edges) + list(bm.faces), dist=1e-6,
+            plane_co=(0.0, 0.0, zcut), plane_no=(0.0, 0.0, 1.0), clear_inner=True)
+        boundary = [e for e in bm.edges if len(e.link_faces) == 1]
+        if boundary:
+            bmesh.ops.holes_fill(bm, edges=boundary, sides=0)
+        if name.startswith("Lock"):
+            zmin = min(v.co.z for v in bm.verts)
+            ring = [v for v in bm.verts if v.co.z < zmin + 0.0025]
+            if ring:
+                cx = sum(v.co.x for v in ring) / len(ring)
+                cy = sum(v.co.y for v in ring) / len(ring)
+                for v in ring:
+                    v.co.x = cx + (v.co.x - cx) * 0.12
+                    v.co.y = cy + (v.co.y - cy) * 0.12
+                    v.co.z -= 0.010
+                bmesh.ops.remove_doubles(bm, verts=ring, dist=0.0012)
+                mid = [v for v in bm.verts if zmin + 0.0025 <= v.co.z < zmin + 0.0300]
+                for v in mid:
+                    t = (v.co.z - zmin) / 0.0300
+                    k = 0.35 + 0.65 * t
+                    v.co.x = cx + (v.co.x - cx) * k
+                    v.co.y = cy + (v.co.y - cy) * k
+        bm.normal_update()
+        bm.to_mesh(ob.data)
+        bm.free()
+        ob.data.update()
+        for p in ob.data.polygons:
+            p.use_smooth = True
+        print("hair trimmed: %-11s verts=%d" % (name, len(ob.data.vertices)))
+
+
+def assert_hair_outside_body():
+    """Report (and push out) any hair vertex still inside the head/neck/torso."""
+    from mathutils.bvhtree import BVHTree
+    verts, faces = [], []
+    for nm in ("Head", "Neck", "Torso", "Bodice"):
+        ob = bpy.data.objects.get(nm)
+        if not ob or ob.type != "MESH":
+            continue
+        mw = ob.matrix_world
+        base = len(verts)
+        verts += [mw @ v.co for v in ob.data.vertices]
+        for p in ob.data.polygons:
+            faces.append([base + i for i in p.vertices])
+    if not faces:
+        return
+    bvh = BVHTree.FromPolygons(verts, faces, all_triangles=False, epsilon=0.0)
+
+    def _count_and_push(push):
+        pushed = 0
+        for nm in ("HairCap", "FringeMass", "Lock_0", "Lock_0_mir"):
+            ob = bpy.data.objects.get(nm)
+            if not ob:
+                continue
+            mw = ob.matrix_world
+            mwi = mw.inverted()
+            moved = 0
+            for v in ob.data.vertices:
+                wco = mw @ v.co
+                hit = bvh.find_nearest(wco)
+                if hit[0] is None:
+                    continue
+                p, n, _idx, _d = hit
+                if (wco - p).dot(n) < 0.0:
+                    moved += 1
+                    if push:
+                        v.co = mwi @ (p + n * 0.0035)
+            if moved and push:
+                ob.data.update()
+                print("hair pushed out: %-11s %d verts" % (nm, moved))
+            pushed += moved
+        return pushed
+
+    pushed = _count_and_push(True)
+    remaining = _count_and_push(False)
+    print("HAIR INSIDE BODY: pushed=%d remaining=%d" % (pushed, remaining))
+
+
+def rebuild_headband(mats):
+    """Thick semicircular band hugging the skull (the shape approved by the client).
+    Replaces the earlier crescent + separate ruffle with a single band."""
+    import bmesh
+    old = bpy.data.objects.get("Headband")
+    coll = None
+    if old:
+        coll = old.users_collection[0] if old.users_collection else None
+        bpy.data.objects.remove(old, do_unlink=True)
+    n, hw = 150, 0.0195
+    verts, faces = [], []
+    for i in range(n):
+        t = i / (n - 1)
+        a = math.radians(-106.0 + 212.0 * t)
+        k = abs(a) / math.radians(106.0)
+        z = 0.9080 - 0.0300 * (1.0 - math.cos(math.pi * k)) * 0.5
+        lobe = 0.0030 * math.cos(2.0 * math.pi * 11.0 * t + 0.4)
+        top = HR.hair_point(a, min(0.9620, z + hw + lobe), 0.0110)
+        bot = HR.hair_point(a, max(0.6600, z - hw), 0.0110)
+        verts += [tuple(top), tuple(bot)]
+    for i in range(n - 1):
+        faces.append((i * 2 + 1, (i + 1) * 2 + 1, (i + 1) * 2, i * 2))
+    me = bpy.data.meshes.new("Headband")
+    me.from_pydata(verts, [], faces)
+    me.update()
+    ob = bpy.data.objects.new("Headband", me)
+    (coll or bpy.context.scene.collection).objects.link(ob)
+    sol = ob.modifiers.new("Thickness", "SOLIDIFY")
+    sol.thickness = 0.0080
+    sol.offset = 0.0
+    sol.use_even_offset = True
+    bpy.context.view_layer.objects.active = ob
+    bpy.ops.object.modifier_apply(modifier=sol.name)
+    sub = ob.modifiers.new("Smooth", "SUBSURF")
+    sub.levels = 1
+    bpy.ops.object.modifier_apply(modifier=sub.name)
+    for v in ob.data.vertices:            # keep it proud of the hair shell
+        v.co.x *= 1.075
+        v.co.y *= 1.075
+    for p in ob.data.polygons:
+        p.use_smooth = True
+    ob.data.materials.clear()
+    ob.data.materials.append(mats["white"])
+    print("headband rebuilt: verts=%d" % len(ob.data.vertices))
+
+
+def crop_panties(press=0.97, band=0.050, zcut=0.2980):
+    """Shorten the briefs to the approved height and press the two panels shut."""
+    import bmesh
+    ob = bpy.data.objects.get("Panties")
+    if ob is None:
+        return
+    bm = bmesh.new()
+    bm.from_mesh(ob.data)
+    bmesh.ops.bisect_plane(
+        bm, geom=list(bm.verts) + list(bm.edges) + list(bm.faces), dist=1e-6,
+        plane_co=(0.0, 0.0, zcut), plane_no=(0.0, 0.0, 1.0), clear_outer=True)
+    zs = [v.co.z for v in bm.verts]
+    lo = min(zs)
+    for v in bm.verts:
+        if v.co.z < lo + band:
+            t = 1.0 - (v.co.z - lo) / band
+            v.co.y *= (1.0 - press * (t ** 0.85))
+    bm.normal_update()
+    bm.to_mesh(ob.data)
+    bm.free()
+    ob.data.update()
+    for p in ob.data.polygons:
+        p.use_smooth = True
+    print("panties cropped: verts=%d" % len(ob.data.vertices))
+
+
+def apply_client_edits(mats):
+    """Bake every hand edit the client made, so a fresh rebuild == the shipped model."""
+    for o in list(bpy.data.objects):
+        if o.name.startswith(("Ear", "Lock_1", "CuffBtn", "ShoulderRuffle", "HeadbandRuffle")):
+            print("REMOVED (client edit):", o.name)
+            bpy.data.objects.remove(o, do_unlink=True)
+    rebuild_headband(mats)
+    crop_panties()
+
+
 def main():
     C.purge_scene()
     mats = M.all_mats()
@@ -144,19 +316,18 @@ def main():
         cams[name] = C.add_camera('Cam_' + name, loc, tgt, lens=lens)
     if DO_RENDER:
         render_views()
-    tris = sum(len(o.data.polygons) for o in bpy.data.objects if o.type == "MESH")
-    verts = sum(len(o.data.vertices) for o in bpy.data.objects if o.type == "MESH")
-    print("OBJECTS", len(bpy.data.objects), "FACES", tris, "VERTS", verts)
     # default camera = three-quarter
     cam = bpy.data.objects.get("Cam_q34")
     if cam:
         bpy.context.scene.camera = cam
     blend = os.path.join(ROOT, "chibi_maid.blend")
-    # the client deleted the ears -- honour that by removing them from the build
-    for o in list(bpy.data.objects):
-        if o.name.startswith(("Ear", "Lock_1")):
-            print("REMOVED (client edit):", o.name)
-            bpy.data.objects.remove(o, do_unlink=True)
+    apply_client_edits(mats)
+    fix_hair_neckline()
+    assert_hair_outside_body()
+
+    tris = sum(len(o.data.polygons) for o in bpy.data.objects if o.type == "MESH")
+    verts = sum(len(o.data.vertices) for o in bpy.data.objects if o.type == "MESH")
+    print("OBJECTS", len(bpy.data.objects), "FACES", tris, "VERTS", verts)
 
     bpy.ops.wm.save_as_mainfile(filepath=blend)
     print("SAVED", blend)
