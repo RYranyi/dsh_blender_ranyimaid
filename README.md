@@ -5,7 +5,9 @@
 
 | 全身 | 面部 | 背面 | 俯视 | 仰视 |
 |:--:|:--:|:--:|:--:|:--:|
-| ![全身](renders/preview/01_full_body.png) | ![面部](renders/preview/02_face.png) | ![背面](renders/preview/03_back.png) | ![俯视](renders/preview/04_top_view.png) | ![仰视](renders/preview/05_low_view.png) |
+| ![全身](https://gh-proxy.com/https://raw.githubusercontent.com/RYranyi/dsh_blender_ranyimaid/main/renders/preview/01_full_body.png) | ![面部](https://gh-proxy.com/https://raw.githubusercontent.com/RYranyi/dsh_blender_ranyimaid/main/renders/preview/02_face.png) | ![背面](https://gh-proxy.com/https://raw.githubusercontent.com/RYranyi/dsh_blender_ranyimaid/main/renders/preview/03_back.png) | ![俯视](https://gh-proxy.com/https://raw.githubusercontent.com/RYranyi/dsh_blender_ranyimaid/main/renders/preview/04_top_view.png) | ![仰视](https://gh-proxy.com/https://raw.githubusercontent.com/RYranyi/dsh_blender_ranyimaid/main/renders/preview/05_low_view.png) |
+
+> 预览图经 `gh-proxy.com` 代理加载（`raw.githubusercontent.com` 在部分网络下不可达）。原始文件见 [`renders/preview/`](renders/preview/)。
 
 - 🎬 **成品视频**：[`renders/maid_intro_60s.mp4`](renders/maid_intro_60s.mp4) — 1280×720 / 24fps / 60s / 中文字幕
 - 🧍 **模型工程**：[`chibi_maid_USER.blend`](chibi_maid_USER.blend) — Blender 5.2 直接打开
