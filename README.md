@@ -5,9 +5,9 @@
 
 | 全身 | 面部 | 背面 | 俯视 | 仰视 |
 |:--:|:--:|:--:|:--:|:--:|
-| ![全身](https://raw.githubusercontent.com/RYranyi/dsh_blender_ranyimaid/main/renders/preview/01_full_body.png) | ![面部](https://raw.githubusercontent.com/RYranyi/dsh_blender_ranyimaid/main/renders/preview/02_face.png) | ![背面](https://raw.githubusercontent.com/RYranyi/dsh_blender_ranyimaid/main/renders/preview/03_back.png) | ![俯视](https://raw.githubusercontent.com/RYranyi/dsh_blender_ranyimaid/main/renders/preview/04_top_view.png) | ![仰视](https://raw.githubusercontent.com/RYranyi/dsh_blender_ranyimaid/main/renders/preview/05_low_view.png) |
+| ![全身](https://gh-proxy.com/https://raw.githubusercontent.com/RYranyi/dsh_blender_ranyimaid/main/renders/preview/01_full_body.png) | ![面部](https://gh-proxy.com/https://raw.githubusercontent.com/RYranyi/dsh_blender_ranyimaid/main/renders/preview/02_face.png) | ![背面](https://gh-proxy.com/https://raw.githubusercontent.com/RYranyi/dsh_blender_ranyimaid/main/renders/preview/03_back.png) | ![俯视](https://gh-proxy.com/https://raw.githubusercontent.com/RYranyi/dsh_blender_ranyimaid/main/renders/preview/04_top_view.png) | ![仰视](https://gh-proxy.com/https://raw.githubusercontent.com/RYranyi/dsh_blender_ranyimaid/main/renders/preview/05_low_view.png) |
 
-> 预览图使用绝对 `raw.githubusercontent.com` 链接：GitHub 会经 `camo` 在服务端代理加载，因此即使本地网络无法直连 `raw.*` 也能正常显示。原始文件见 [`renders/preview/`](renders/preview/)。
+> 预览图经 `gh-proxy.com` 镜像加载：GitHub 会把外链图片转由 `camo.githubusercontent.com` 在服务端抓取，因此本地即使无法直连 `raw.githubusercontent.com` 也能正常显示。直链：`renders/preview/`。
 
 - 🎬 **成品视频**：[`renders/maid_intro_60s.mp4`](renders/maid_intro_60s.mp4) — 1280×720 / 24fps / 60s / 中文字幕
 - 🧍 **模型工程**：[`chibi_maid_USER.blend`](chibi_maid_USER.blend) — Blender 5.2 直接打开
