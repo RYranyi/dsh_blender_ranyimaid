@@ -1,0 +1,21 @@
+# Blender
+*.blend1
+*.blend2
+*.blend@
+*.blend~
+
+# 渲染中间产物
+renders/show/
+renders/turn/
+renders/_silent.mp4
+*.mp4.part
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# 系统 / 编辑器
+Thumbs.db
+.DS_Store
+*.log
