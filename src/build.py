@@ -5,8 +5,9 @@ import os
 import math
 from mathutils import Vector
 
-ROOT = r"E:\dsh\maid_chibi\procedural_v2"
-HERE = ROOT + r"\src"
+# 仓库自带相对路径：脚本放在 <repo>/src/build.py，模型与渲染输出落在 <repo>/
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(HERE)
 if HERE not in sys.path:
     sys.path.insert(0, HERE)
 

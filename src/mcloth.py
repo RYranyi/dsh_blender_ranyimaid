@@ -11,7 +11,7 @@ import mprop as P
 import mhead as HD
 import mbody as BD
 
-_HERE = os.path.dirname(os.path.abspath(__file__)) if "__file__" in dir() else r"E:\dsh\maid_chibi\src"
+_HERE = os.path.dirname(os.path.abspath(__file__)) if "__file__" in dir() else os.getcwd()
 for _p in (os.path.join(_HERE, "lib"), _HERE):
     if _p not in sys.path:
         sys.path.insert(0, _p)
